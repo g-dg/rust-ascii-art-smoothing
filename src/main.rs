@@ -44,7 +44,6 @@ fn main() {
         1 => smooth_v1(&original_map, smoothness as u32),
         2 => smooth_v2(&original_map, smoothness as u32),
         3 => smooth_v3(&original_map, smoothness),
-        4 => smooth_v4(&original_map, smoothness),
         _ => clone_map(&original_map),
     };
 
@@ -121,56 +120,6 @@ fn smooth_v2(map: &Vec<Vec<f64>>, iterations: u32) -> Vec<Vec<f64>> {
 }
 
 fn smooth_v3(map: &Vec<Vec<f64>>, radius: f64) -> Vec<Vec<f64>> {
-    let mut smoothed = clone_map(&map);
-
-    let radius_ceil = radius.ceil() as i32;
-    let radius_squared = (radius * radius).ceil() as i32;
-
-    let weight_function = |center_x: f64, center_y: f64, point_x: f64, point_y: f64| -> f64 {
-        let delta_x = (center_x - point_x).abs();
-        let delta_y = (center_y - point_y).abs();
-        let distance = (delta_x * delta_x + delta_y * delta_y).sqrt();
-        let multiplier = radius - distance;
-        multiplier.max(0.0)
-    };
-
-    let weight_map: Vec<Vec<f64>> = (0..radius.ceil() as u32)
-        .map(|y| {
-            (0..radius.ceil() as u32)
-                .map(|x| weight_function(0.0, 0.0, x as f64, y as f64))
-                .collect()
-        })
-        .collect();
-
-    for (origin_y, origin_row) in map.iter().enumerate() {
-        let y_start = origin_y as i32 - radius_ceil + 1;
-        let y_end = origin_y as i32 + radius_ceil;
-        for (origin_x, _) in origin_row.iter().enumerate() {
-            let mut total = 0.0;
-            let x_start = origin_x as i32 - radius_ceil + 1;
-            let x_end = origin_x as i32 + radius_ceil;
-            for y in y_start..y_end {
-                let wrapped_y = wrap(y, 0, map.len() as i32) as usize;
-                let y_diff = (origin_y as i32 - y).abs();
-                for x in x_start..x_end {
-                    let x_diff = (origin_x as i32 - x).abs();
-                    if (x_diff * x_diff + y_diff * y_diff) <= radius_squared {
-                        let wrapped_x = wrap(x, 0, origin_row.len() as i32) as usize;
-                        let value = map[wrapped_y][wrapped_x];
-                        let weight = weight_map[(origin_y as i32 - y).abs() as usize]
-                            [(origin_x as i32 - x).abs() as usize];
-                        total += value * weight;
-                    }
-                }
-            }
-            smoothed[origin_y][origin_x] = total;
-        }
-    }
-
-    smoothed
-}
-
-fn smooth_v4(map: &Vec<Vec<f64>>, radius: f64) -> Vec<Vec<f64>> {
     let mut smoothed = clone_map(&map);
 
     let radius_ceil = radius.ceil() as i32;
