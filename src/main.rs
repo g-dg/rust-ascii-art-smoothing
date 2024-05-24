@@ -50,9 +50,9 @@ fn main() {
     display(&smoothed, &chars);
 }
 
-fn smooth_v1(map: &Vec<Vec<f64>>, iterations: u32) -> Vec<Vec<f64>> {
+fn smooth_v1(map: &[Vec<f64>], iterations: u32) -> Vec<Vec<f64>> {
     let mut old: Vec<Vec<f64>>;
-    let mut new: Vec<Vec<f64>> = clone_map(&map);
+    let mut new: Vec<Vec<f64>> = clone_map(map);
 
     for _ in 0..iterations {
         old = clone_map(&new);
@@ -80,14 +80,14 @@ fn smooth_v1(map: &Vec<Vec<f64>>, iterations: u32) -> Vec<Vec<f64>> {
     new
 }
 
-fn smooth_v2(map: &Vec<Vec<f64>>, iterations: u32) -> Vec<Vec<f64>> {
+fn smooth_v2(map: &[Vec<f64>], iterations: u32) -> Vec<Vec<f64>> {
     let corner = 1.0 / ((2.0_f64).sqrt() * 2.0);
     let edge = 1.0 / 2.0;
-    let center = 1.0 / 1.0;
+    let center = 1.0;
     let divisor = corner * 4.0 + edge * 4.0 + center;
 
     let mut old: Vec<Vec<f64>>;
-    let mut new: Vec<Vec<f64>> = clone_map(&map);
+    let mut new: Vec<Vec<f64>> = clone_map(map);
 
     for _ in 0..iterations {
         old = clone_map(&new);
@@ -119,8 +119,8 @@ fn smooth_v2(map: &Vec<Vec<f64>>, iterations: u32) -> Vec<Vec<f64>> {
     new
 }
 
-fn smooth_v3(map: &Vec<Vec<f64>>, radius: f64) -> Vec<Vec<f64>> {
-    let mut smoothed = clone_map(&map);
+fn smooth_v3(map: &[Vec<f64>], radius: f64) -> Vec<Vec<f64>> {
+    let mut smoothed = clone_map(map);
 
     let radius_ceil = radius.ceil() as i32;
     let radius_squared = (radius * radius).ceil() as i32;
@@ -156,8 +156,8 @@ fn smooth_v3(map: &Vec<Vec<f64>>, radius: f64) -> Vec<Vec<f64>> {
                     if (x_diff * x_diff + y_diff * y_diff) <= radius_squared {
                         let wrapped_x = wrap(x, 0, origin_row.len() as i32) as usize;
                         let value = map[wrapped_y][wrapped_x];
-                        let weight = weight_map[(origin_y as i32 - y).abs() as usize]
-                            [(origin_x as i32 - x).abs() as usize];
+                        let weight = weight_map[(origin_y as i32 - y).unsigned_abs() as usize]
+                            [(origin_x as i32 - x).unsigned_abs() as usize];
                         total += value * weight;
                     }
                 }
@@ -169,7 +169,7 @@ fn smooth_v3(map: &Vec<Vec<f64>>, radius: f64) -> Vec<Vec<f64>> {
     smoothed
 }
 
-fn display(display_map: &Vec<Vec<f64>>, chars: &Vec<char>) {
+fn display(display_map: &Vec<Vec<f64>>, chars: &[char]) {
     let (min, max) = display_map
         .iter()
         .fold((f64::INFINITY, f64::NEG_INFINITY), |state, row| {
@@ -221,6 +221,6 @@ fn wrap<
     ((x % (max - min)) + (max - min)) % (max - min) + min
 }
 
-fn clone_map(map: &Vec<Vec<f64>>) -> Vec<Vec<f64>> {
-    map.iter().map(|x| x.clone()).collect()
+fn clone_map(map: &[Vec<f64>]) -> Vec<Vec<f64>> {
+    map.to_vec()
 }
